@@ -1,0 +1,418 @@
+<!-- ===============================
+      Dashbord IOT
+=============================== -->
+<!DOCTYPE html>
+<!-- Indique que le document est en HTML5 -->
+
+<html lang="fr">
+<!-- Balise racine du document
+     lang="fr" indique que la langue principale est le français -->
+
+<head>
+  <!-- Section “head” : contient les informations techniques sur la page -->
+
+  <meta charset="utf-8" />
+  <!-- Définit le jeu de caractères UTF-8 pour gérer les accents et caractères spéciaux -->
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Rend la page responsive sur tous les écrans (smartphones, tablettes, PC) -->
+
+  <title>TP IoT — Dashboard LED</title>
+  <!-- Titre de la page qui apparaît dans l’onglet du navigateur -->
+
+  <!-- ===============================
+       2️⃣ Styles CSS
+       Objectif : styliser le dashboard et la LED
+  =============================== -->
+  <style>
+    :root {
+      --bg: #0f172a;
+      --bg-2: #111827;
+      --card: rgba(255, 255, 255, 0.08);
+      --border: rgba(148, 163, 184, 0.18);
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --green: #22c55e;
+      --red: #ef4444;
+      --blue: #60a5fa;
+      --shadow: 0 20px 45px rgba(15, 23, 42, 0.45);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      background: radial-gradient(circle at top, #1e293b 0%, var(--bg) 52%, var(--bg-2) 100%);
+      color: var(--text);
+      padding: 24px 16px;
+    }
+
+    .page {
+      width: min(100%, 760px);
+      margin: 0 auto;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+      padding: 16px 18px;
+      background: rgba(15, 23, 42, 0.5);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--blue);
+      font-size: 12px;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.5rem, 2vw, 2.3rem);
+      line-height: 1.2;
+    }
+
+    .status-badge {
+      white-space: nowrap;
+      padding: 9px 14px;
+      border-radius: 999px;
+      background: rgba(59, 130, 246, 0.12);
+      border: 1px solid rgba(96, 165, 250, 0.45);
+      color: var(--blue);
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      font-size: 0.85rem;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(120px, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .summary-card,
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .summary-card {
+      padding: 14px 16px;
+      text-align: center;
+    }
+
+    .summary-label {
+      display: block;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .summary-card strong {
+      font-size: clamp(1.1rem, 2vw, 1.6rem);
+      font-weight: 800;
+    }
+
+    .led-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .card {
+      padding: 22px 18px;
+      text-align: center;
+    }
+
+    .lamp {
+      width: 76px;
+      height: 104px;
+      margin: 4px auto 12px;
+      border-radius: 18px 18px 28px 28px;
+      background: linear-gradient(180deg, #f87171 0%, var(--red) 100%);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.2), 0 0 22px rgba(239,68,68,0.6);
+      transition: all 0.25s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .lamp::before {
+      content: "";
+      position: absolute;
+      inset: 12px 16px auto 16px;
+      height: 12px;
+      border-radius: 7px;
+      background: rgba(255,255,255,0.35);
+    }
+
+    .lamp.on {
+      background: linear-gradient(180deg, #4ade80 0%, var(--green) 100%);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.25), 0 0 28px rgba(34,197,94,0.9);
+    }
+
+    .led-text {
+      margin: 10px 0 14px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    .led-controls {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .toggle-btn {
+      flex: 1;
+      max-width: 110px;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: white;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: transform 0.15s ease, filter 0.2s ease;
+    }
+
+    .toggle-btn:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.08);
+    }
+
+    .toggle-btn:active {
+      transform: translateY(0);
+    }
+
+    .toggle-btn.on { background: linear-gradient(180deg, #4ade80 0%, #16a34a 100%); }
+    .toggle-btn.off { background: linear-gradient(180deg, #f87171 0%, #dc2626 100%); }
+
+    .sensor-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(180px, 1fr));
+      gap: 16px;
+      margin-top: 4px;
+    }
+
+    .sensor-card {
+      padding: 18px 16px;
+      text-align: center;
+    }
+
+    .sensor-icon {
+      font-size: 2rem;
+      margin-bottom: 8px;
+    }
+
+    .sensor-value {
+      font-size: clamp(1.8rem, 4vw, 2.5rem);
+      font-weight: 800;
+      margin: 6px 0;
+      letter-spacing: -0.04em;
+    }
+
+    .sensor-label {
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      font-weight: 700;
+    }
+
+    .footer-note {
+      margin-top: 18px;
+      color: var(--muted);
+      text-align: right;
+      font-size: 0.82rem;
+    }
+
+    @media (max-width: 640px) {
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .summary-grid,
+      .led-grid,
+      .sensor-row {
+        grid-template-columns: 1fr;
+      }
+
+      .footer-note {
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">IoT / ESP32 / Firebase</p>
+        <h1>Dashboard LED &amp; Capteurs</h1>
+      </div>
+      <div class="status-badge" id="systemStatus">Connexion...</div>
+    </header>
+
+    <section class="summary-grid">
+      <div class="summary-card">
+        <span class="summary-label">LED 1</span>
+        <strong id="summaryLed1">OFF</strong>
+      </div>
+      <div class="summary-card">
+        <span class="summary-label">LED 2</span>
+        <strong id="summaryLed2">OFF</strong>
+      </div>
+      <div class="summary-card">
+        <span class="summary-label">État</span>
+        <strong id="systemMode">LIVE</strong>
+      </div>
+    </section>
+
+    <section class="led-grid">
+      <div class="card led-card">
+        <div class="lamp" id="lamp1"></div>
+        <div class="led-text" id="ledText1">LED1 OFF</div>
+        <div class="led-controls">
+          <button class="toggle-btn on" id="btnOn1">ON</button>
+          <button class="toggle-btn off" id="btnOff1">OFF</button>
+        </div>
+      </div>
+
+      <div class="card led-card">
+        <div class="lamp" id="lamp2"></div>
+        <div class="led-text" id="ledText2">LED2 OFF</div>
+        <div class="led-controls">
+          <button class="toggle-btn on" id="btnOn2">ON</button>
+          <button class="toggle-btn off" id="btnOff2">OFF</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="sensor-row">
+      <div class="card sensor-card">
+        <div class="sensor-icon">🌡️</div>
+        <div class="sensor-value" id="tempValue">-- °C</div>
+        <div class="sensor-label">Température</div>
+      </div>
+      <div class="card sensor-card">
+        <div class="sensor-icon">💧</div>
+        <div class="sensor-value" id="humValue">-- %</div>
+        <div class="sensor-label">Humidité</div>
+      </div>
+    </section>
+
+    <div class="footer-note">Dernière mise à jour : <span id="lastUpdate">--:--:--</span></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+    import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBOKDMWWuCalx1uIr878NNY3ZIO4HgvAxI",
+      authDomain: "oct-stage.firebaseapp.com",
+      databaseURL: "https://oct-stage-default-rtdb.firebaseio.com",
+      projectId: "oct-stage",
+      storageBucket: "oct-stage.firebasestorage.app",
+      messagingSenderId: "1073681258417",
+      appId: "1:1073681258417:web:c27f894a3e0783897b8f90",
+      measurementId: "G-4XEBDGEE3Q"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const ledRef1 = ref(db, "/led_1");
+    const ledRef2 = ref(db, "/led_2");
+    const sensorRef = ref(db, "/sensors");
+
+    const lamp1 = document.getElementById('lamp1');
+    const lamp2 = document.getElementById('lamp2');
+    const ledText1 = document.getElementById('ledText1');
+    const ledText2 = document.getElementById('ledText2');
+    const tempValue = document.getElementById('tempValue');
+    const humValue = document.getElementById('humValue');
+    const summaryLed1 = document.getElementById('summaryLed1');
+    const summaryLed2 = document.getElementById('summaryLed2');
+    const systemStatus = document.getElementById('systemStatus');
+    const lastUpdate = document.getElementById('lastUpdate');
+
+    function updateLastSync() {
+      const now = new Date();
+      lastUpdate.textContent = now.toLocaleTimeString('fr-FR');
+    }
+
+    function updateSystemStatus(online) {
+      systemStatus.textContent = online ? 'Connecté' : 'Déconnecté';
+      systemStatus.style.color = online ? '#86efac' : '#fca5a5';
+      systemStatus.style.background = online ? 'rgba(34, 197, 94, 0.12)' : 'rgba(239, 68, 68, 0.12)';
+      systemStatus.style.borderColor = online ? 'rgba(34, 197, 94, 0.5)' : 'rgba(239, 68, 68, 0.5)';
+    }
+
+    function setLedState(lamp, label, summary, state, name) {
+      const isOn = Boolean(state);
+      lamp.classList.toggle('on', isOn);
+      label.textContent = `${name} ${isOn ? 'ON' : 'OFF'}`;
+      summary.textContent = isOn ? 'ON' : 'OFF';
+      summary.style.color = isOn ? '#86efac' : '#fca5a5';
+    }
+
+    document.getElementById('btnOn1').onclick = () => set(ledRef1, true);
+    document.getElementById('btnOff1').onclick = () => set(ledRef1, false);
+    document.getElementById('btnOn2').onclick = () => set(ledRef2, true);
+    document.getElementById('btnOff2').onclick = () => set(ledRef2, false);
+
+    onValue(ledRef1, snap => {
+      const value = snap.val();
+      setLedState(lamp1, ledText1, summaryLed1, value, 'LED1');
+      updateSystemStatus(true);
+      updateLastSync();
+    });
+
+    onValue(ledRef2, snap => {
+      const value = snap.val();
+      setLedState(lamp2, ledText2, summaryLed2, value, 'LED2');
+      updateSystemStatus(true);
+      updateLastSync();
+    });
+
+    onValue(sensorRef, snap => {
+      const data = snap.val();
+      if (!data) return;
+
+      if (typeof data.temperature === 'number') {
+        tempValue.textContent = data.temperature.toFixed(1) + ' °C';
+      }
+
+      if (typeof data.humidity === 'number') {
+        humValue.textContent = data.humidity.toFixed(1) + ' %';
+      }
+
+      updateSystemStatus(true);
+      updateLastSync();
+    });
+  </script>
+</body>
+</html>
